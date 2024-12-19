@@ -86,6 +86,24 @@
           </UserTable>
         </template>
       </PaginatedListContainerWithBackend>
+      <PaginatedListContainerWithBackend
+        v-model="currentPage"
+        :items="facilityUsers"
+        :itemsPerPage="itemsPerPage"
+        :totalPageNumber="totalPages"
+        :roleFilter="roleFilter"
+        :numFilteredItems="usersCount"
+      >
+        <KTable
+          class="move-down user-roster"
+          :headers="tableHeaders"
+          :caption="$tr('tableCaption')"
+          :rows="tableRows"
+          :dataLoading="dataLoading"
+          :emptyMessage="emptyMessageForItems(facilityUsers, search)"
+          sortable
+        />
+      </PaginatedListContainerWithBackend>
 
       <!-- Modals -->
 
@@ -161,6 +179,59 @@
       ...mapGetters(['facilityPageLinks']),
       ...mapState('userManagement', ['facilityUsers', 'totalPages', 'usersCount', 'dataLoading']),
       Modals: () => Modals,
+      tableHeaders() {
+        return [
+          {
+            label: this.coreString('fullNameLabel'),
+            dataType: 'string',
+            minWidth: '150px',
+            width: '20%',
+          },
+          {
+            label: this.coreString('usernameLabel'),
+            dataType: 'string',
+            minWidth: '150px',
+            width: '15%',
+          },
+          {
+            label: this.coreString('identifierLabel'),
+            dataType: 'string',
+            minWidth: '150px',
+            width: '15%',
+          },
+          {
+            label: this.coreString('genderLabel'),
+            dataType: 'string',
+            minWidth: '150px',
+            width: '10%',
+          },
+          {
+            label: this.coreString('birthYearLabel'),
+            dataType: 'date',
+            minWidth: '150px',
+            width: '20%',
+          },
+          {
+            label: this.coreString('userActionsColumnHeader'),
+            dataType: 'undefined',
+            minWidth: '150px',
+            width: '20%',
+          },
+        ];
+      },
+      tableRows() {
+        return this.facilityUsers.map(user => {
+          console.log(user); // Log the user object
+          return [
+            user.full_name,
+            user.username,
+            user.id,
+            user.gender,
+            user.birth_year,
+            user,
+          ];
+        });
+      },
       userKinds() {
         return [
           { label: this.coreString('allLabel'), value: ALL_FILTER },
@@ -298,6 +369,10 @@
       },
     },
     $trs: {
+      tableCaption: {
+        message: 'Users',
+        context: 'Caption for the user table.',
+      },
       searchText: {
         message: 'Search for a user…',
         context: 'Refers to the search option on the user page.',
