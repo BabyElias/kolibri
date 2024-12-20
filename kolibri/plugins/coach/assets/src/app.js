@@ -71,6 +71,9 @@ class CoachToolsModule extends KolibriApp {
         PageNames.LESSON_EDIT_DETAILS_BETTER,
         PageNames.LESSON_PREVIEW_SELECTED_RESOURCES,
         PageNames.LESSON_PREVIEW_RESOURCE,
+        PageNames.LESSON_SELECT_RESOURCES_INDEX,
+        PageNames.LESSON_SELECT_RESOURCES_BOOKMARKS,
+        PageNames.LESSON_SELECT_RESOURCES_TOPIC_TREE,
       ];
       // If we're navigating to the same page for a quiz summary page, don't set loading
       if (
@@ -139,9 +142,16 @@ class CoachToolsModule extends KolibriApp {
       }
 
       if (promises.length > 0) {
-        Promise.all(promises).then(next, error => {
-          this.store.dispatch('handleApiError', { error });
-        });
+        Promise.all(promises)
+          .catch(error => {
+            this.store.dispatch('handleApiError', { error });
+          })
+          .catch(() => {
+            // We catch here because `handleApiError` throws the error back again, in this case,
+            // we just want things to keep moving so that the AuthMessage shows as expected
+            next();
+          })
+          .then(next);
       } else {
         next();
       }
