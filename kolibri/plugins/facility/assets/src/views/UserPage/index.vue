@@ -102,7 +102,41 @@
           :dataLoading="dataLoading"
           :emptyMessage="emptyMessageForItems(facilityUsers, search)"
           sortable
-        />
+        >
+          <template #header="{ header, colIndex }">
+            <span :class="{ visuallyhidden: colIndex === 5 }">{{ header.label }}</span>
+            <span v-if="colIndex === 2">
+              <CoreInfoIcon
+                class="tooltip"
+                :iconAriaLabel="coreString('identifierAriaLabel')"
+                :tooltipText="coreString('identifierTooltip')"
+              />
+            </span>
+          </template>
+          <template #cell="{ content, colIndex, row }">
+            <span v-if="colIndex === 0">
+              <KLabeledIcon
+                icon='person'
+                :label="content"
+                :style="{ color: $themeTokens.text }"
+              />
+              <UserTypeDisplay
+                aria-hidden="true"
+                :userType="row.kind"
+                :omitLearner="true"
+                data-test="userRoleBadge"
+                :class="$computedClass(userRoleBadgeStyle)"
+              />
+            </span>
+            <span v-else-if="colIndex === 1">
+
+              <KOptionalText :text="content ? content : ''" />
+            </span>
+
+          </template>
+
+          
+        </KTable>
       </PaginatedListContainerWithBackend>
 
       <!-- Modals -->
@@ -135,6 +169,8 @@
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
   import FilterTextbox from 'kolibri/components/FilterTextbox';
   import UserTable from 'kolibri-common/components/UserTable';
+  import UserTypeDisplay from 'kolibri-common/components/UserTypeDisplay';
+  import CoreInfoIcon from 'kolibri-common/components/labels/CoreInfoIcon';
   import cloneDeep from 'lodash/cloneDeep';
   import PaginatedListContainerWithBackend from 'kolibri-common/components/PaginatedListContainerWithBackend';
   import useUser from 'kolibri/composables/useUser';
@@ -153,6 +189,8 @@
       };
     },
     components: {
+      UserTypeDisplay,
+      CoreInfoIcon,
       FacilityAppBarPage,
       FilterTextbox,
       ResetUserPasswordModal,
@@ -240,6 +278,12 @@
           { label: this.$tr('admins'), value: UserKinds.ADMIN },
           { label: this.$tr('superAdmins'), value: UserKinds.SUPERUSER },
         ];
+      },
+      userRoleBadgeStyle() {
+        return {
+          color: this.$themeTokens.textInverted,
+          backgroundColor: this.$themeTokens.annotation,
+        };
       },
       roleFilter: {
         get() {
@@ -440,6 +484,16 @@
 
   .type-filter {
     margin-bottom: 0;
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 0;
+    padding-right: 8px;
+    padding-left: 8px;
+    margin-left: 16px;
+    font-size: small;
+    white-space: nowrap;
+    border-radius: 4px;
   }
 
   .user-roster {
