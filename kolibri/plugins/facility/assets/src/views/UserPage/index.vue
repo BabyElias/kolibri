@@ -122,16 +122,42 @@
               />
               <UserTypeDisplay
                 aria-hidden="true"
-                :userType="row.kind"
+                :userType="row[5].kind"
                 :omitLearner="true"
+                class="role-badge"
                 data-test="userRoleBadge"
                 :class="$computedClass(userRoleBadgeStyle)"
               />
             </span>
-            <span v-else-if="colIndex === 1">
+            <span v-else-if="colIndex === 2">
 
               <KOptionalText :text="content ? content : ''" />
             </span>
+            <span v-else-if="colIndex === 3">
+              <GenderDisplayText :gender="content" />
+
+            </span>
+            <span v-else-if="colIndex === 4">
+              <BirthYearDisplayText :birthYear="content" />
+            </span>
+            <span
+              v-else-if="colIndex === 5"
+              class="core-table-button-col"
+            >
+              <KButton
+                appearance="flat-button"
+                hasDropdown
+                :text="$tr('optionsButtonLabel')"
+                :disabled="!userCanBeEdited(content)"
+              >
+                <KDropdownMenu
+                  :options="manageUserOptions(content.id)"
+                  @select="handleManageUserSelection($event, content)"
+                />
+              </KButton>
+              
+            </span>
+
 
           </template>
 
@@ -171,6 +197,8 @@
   import UserTable from 'kolibri-common/components/UserTable';
   import UserTypeDisplay from 'kolibri-common/components/UserTypeDisplay';
   import CoreInfoIcon from 'kolibri-common/components/labels/CoreInfoIcon';
+  import GenderDisplayText from 'kolibri-common/components/userAccounts/GenderDisplayText';
+  import BirthYearDisplayText from 'kolibri-common/components/userAccounts/BirthYearDisplayText';
   import cloneDeep from 'lodash/cloneDeep';
   import PaginatedListContainerWithBackend from 'kolibri-common/components/PaginatedListContainerWithBackend';
   import useUser from 'kolibri/composables/useUser';
@@ -190,6 +218,8 @@
     },
     components: {
       UserTypeDisplay,
+      GenderDisplayText,
+      BirthYearDisplayText,
       CoreInfoIcon,
       FacilityAppBarPage,
       FilterTextbox,
@@ -263,7 +293,7 @@
           return [
             user.full_name,
             user.username,
-            user.id,
+            user.id_number,
             user.gender,
             user.birth_year,
             user,
