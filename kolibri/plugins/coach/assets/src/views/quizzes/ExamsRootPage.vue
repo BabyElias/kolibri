@@ -372,6 +372,7 @@
         'getExamStatusTally',
         'getLearnersForExam',
         'getRecipientNamesForExam',
+        'getGroupNames',
       ]),
       ...mapState('classSummary', { className: 'name' }),
       practiceQuizzesExist() {
@@ -447,11 +448,14 @@
               exam.groups.includes(recipientsFilter) || exam.learner_ids.includes(recipientsFilter),
           );
         }
-
         return selectedExams.map(quiz => {
           const learnersForQuiz = this.getLearnersForExam(quiz);
           quiz.tally = this.getExamStatusTally(quiz.id, learnersForQuiz);
           quiz.avgScore = this.getExamAvgScore(quiz.id, learnersForQuiz);
+          quiz.totalLearners = this.getLearnersForExam(quiz).length;
+          quiz.recipientNames = this.getRecipientNamesForExam(quiz);
+          quiz.hasAssignments = quiz.assignments.length > 0;
+          quiz.groupNames = this.getGroupNames(quiz.groups);
           return quiz;
         });
       },
@@ -526,8 +530,11 @@
         const columns = [
           ...csvFields.title(),
           ...csvFields.recipients(this.className),
+          ...csvFields.avgScore(),
+          ...csvFields.allLearners('totalLearners'),
           ...csvFields.tally(),
         ];
+
         const fileName = this.$tr('printLabel', { className: this.className });
         new CSVExporter(columns, fileName).export(this.filteredExams);
       },
@@ -592,9 +599,9 @@
           'Descriptive text at the top of the table that displays the calculated file size of all quiz resources (i.e. 120 MB)',
       },
       printLabel: {
-        message: '{className} Lessons',
+        message: '{className} Quizzes',
         context:
-          "Title that displays on a printed copy of the 'Reports' > 'Lessons' page. This shows if the user uses the 'Print' option by clicking on the printer icon.",
+          "Title that displays on a printed copy of the 'Coach' > 'Quizzes' page. This shows if the user uses the 'Print' option by clicking on the printer icon.",
       },
       adminLink: {
         message: 'Import channels to your device',
