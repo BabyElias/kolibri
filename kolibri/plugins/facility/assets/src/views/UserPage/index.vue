@@ -102,6 +102,8 @@
           :dataLoading="dataLoading"
           :emptyMessage="emptyMessageForItems(facilityUsers, search)"
           sortable
+          disableBuiltinSorting
+          @changeSort="changeSortHandler"
         >
           <template #header="{ header, colIndex }">
             <span :class="{ visuallyhidden: colIndex === 5 }">{{ header.label }}</span>
@@ -208,6 +210,9 @@
   import DeleteUserModal from './DeleteUserModal';
 
   const ALL_FILTER = 'all';
+  const SORT_ORDER_ASC = 'asc';
+  const SORT_ORDER_DESC = 'desc';
+  const DATA_TYPE_OTHERS = 'undefined';
 
   export default {
     name: 'UserPage',
@@ -241,6 +246,8 @@
       return {
         selectedUser: null,
         modalShown: null,
+        sortOrder: null,
+        sortKey: null,
       };
     },
     computed: {
@@ -378,6 +385,23 @@
       this.debouncedSearchTerm = debounce(this.emitSearchTerm, 500);
     },
     methods: {
+      changeSortHandler(index) {
+        if (this.tableHeaders[index].dataType === DATA_TYPE_OTHERS) return;
+
+        if (this.sortKey === index) {
+          if (this.sortOrder === SORT_ORDER_ASC) {
+            this.sortOrder = SORT_ORDER_DESC;
+          } else if (this.sortOrder === SORT_ORDER_DESC) {
+            this.sortKey = null;
+            this.sortOrder = null;
+          }
+        } else {
+          this.sortKey = index;
+          this.sortOrder = SORT_ORDER_ASC;
+        }
+        console.log(`changeSort event emitted with index: ${index}, sortOrder: ${this.sortOrder}, and sortKey: ${this.sortKey}`);
+        this.$emit('changeSort', this.sortOrder, this.sortKey,index);
+      },
       emptyMessageForItems(items, filterText) {
         if (this.facilityUsers.length === 0) {
           return this.$tr('noUsersExist');
