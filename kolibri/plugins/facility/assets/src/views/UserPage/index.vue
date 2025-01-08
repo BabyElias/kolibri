@@ -296,7 +296,6 @@
       },
       tableRows() {
         return this.facilityUsers.map(user => {
-          console.log(user); // Log the user object
           return [
             user.full_name,
             user.username,
@@ -385,7 +384,7 @@
       this.debouncedSearchTerm = debounce(this.emitSearchTerm, 500);
     },
     methods: {
-      changeSortHandler(index) {
+      changeSortHandler({ sortKey, sortOrder, index }) {
         if (this.tableHeaders[index].dataType === DATA_TYPE_OTHERS) return;
 
         if (this.sortKey === index) {
@@ -400,7 +399,7 @@
           this.sortOrder = SORT_ORDER_ASC;
         }
         console.log(`changeSort event emitted with index: ${index}, sortOrder: ${this.sortOrder}, and sortKey: ${this.sortKey}`);
-        this.$emit('changeSort', this.sortOrder, this.sortKey,index);
+        this.$emit('changeSort', { sortOrder: this.sortOrder, sortKey: this.sortKey, index });
       },
       emptyMessageForItems(items, filterText) {
         if (this.facilityUsers.length === 0) {
