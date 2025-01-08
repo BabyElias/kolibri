@@ -357,6 +357,7 @@ program
   .command('test')
   .option('--config [config]', 'Set configuration for jest tests')
   .allowUnknownOption()
+  .allowExcessArguments(true)
   .action(function (options) {
     const baseConfigPath = path.resolve(__dirname, '../jest.conf');
     if (process.env.NODE_ENV == null) {
