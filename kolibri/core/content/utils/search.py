@@ -105,14 +105,17 @@ class SQLiteBitwiseORAggregate(Aggregate):
         )
 
 
-def get_available_metadata_labels(base_queryset):  # noqa: C901
+def get_available_metadata_labels(  # noqa: C901
+    base_queryset, use_deprecated_channels_labels=False
+):
     from kolibri.core.device.models import ContentCacheKey
 
     content_cache_key = ContentCacheKey.get_cache_key()
     try:
-        cache_key = "search-labels:{}:{}".format(
+        cache_key = "search-labels:{}:{}:{}".format(
             content_cache_key,
             hashlib.md5(str(base_queryset.query).encode("utf8")).hexdigest(),
+            "with-channels" if use_deprecated_channels_labels else "no-channels",
         )
     except EmptyResultSet:
         return empty_labels
@@ -137,7 +140,8 @@ def get_available_metadata_labels(base_queryset):  # noqa: C901
                 if bit_value is not None and bit_value & value["bits"]:
                     output[value["field_name"]].append(value["label"])
         output["languages"] = _get_available_languages(base_queryset)
-        output["channels"] = _get_available_channels(base_queryset)
+        if use_deprecated_channels_labels:
+            output["channels"] = _get_available_channels(base_queryset)
         cache.set(cache_key, output, timeout=None)
     return cache.get(cache_key)
 

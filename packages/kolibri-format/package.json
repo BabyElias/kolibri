@@ -23,7 +23,7 @@
     "eslint-plugin-jest-dom": "^5.5.0",
     "eslint-plugin-kolibri": "^0.18.0",
     "eslint-plugin-vue": "^9.32.0",
-    "fast-glob": "3.3.2",
+    "fast-glob": "3.3.3",
     "kolibri-logging": "^1.0.0",
     "postcss-html": "^1.7.0",
     "postcss-less": "^6.0.0",

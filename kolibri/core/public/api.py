@@ -34,7 +34,7 @@ from kolibri.core.content.api import BaseChannelMetadataMixin
 from kolibri.core.content.api import BaseContentNodeMixin
 from kolibri.core.content.api import BaseContentNodeTreeViewset
 from kolibri.core.content.api import metadata_cache
-from kolibri.core.content.api import OptionalContentNodePagination
+from kolibri.core.content.api import PublicContentNodePagination
 from kolibri.core.content.models import ChannelMetadata
 from kolibri.core.content.models import ContentNode
 from kolibri.core.content.models import LocalFile
@@ -137,7 +137,7 @@ class PublicChannelMetadataViewSet(BaseChannelMetadataMixin, ReadOnlyValuesViews
 
 @method_decorator(public_metadata_cache, name="dispatch")
 class PublicContentNodeViewSet(BaseContentNodeMixin, ReadOnlyValuesViewset):
-    pagination_class = OptionalContentNodePagination
+    pagination_class = PublicContentNodePagination
 
 
 @method_decorator(public_metadata_cache, name="dispatch")

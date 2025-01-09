@@ -392,6 +392,23 @@ class ContentNodeAPIBase(object):
         self.assertEqual(len(response.data), expected_output)
         self._assert_nodes(response.data, nodes)
 
+    def test_contentnode_channel_metadata_label_absent_in_internal_api(self):
+        response = self._get(
+            reverse("kolibri:core:contentnode-list"), data={"max_results": 5}
+        )
+        self.assertEqual(response.status_code, 200)
+        if not self.baseurl:
+            self.assertNotIn("channels", response.data.get("labels"))
+        else:
+            self.assertIn("channels", response.data.get("labels"))
+
+    def test_contentnode_channel_metadata_label_present_in_public_api(self):
+        response = self._get(
+            reverse("kolibri:core:publiccontentnode-list"), data={"max_results": 5}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("channels", response.data.get("labels"))
+
     def test_contentnode_etag(self):
         root = content.ContentNode.objects.get(title="root")
         nodes = root.get_descendants(include_self=True).filter(available=True)
