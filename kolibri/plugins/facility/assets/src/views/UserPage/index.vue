@@ -210,9 +210,6 @@
   import DeleteUserModal from './DeleteUserModal';
 
   const ALL_FILTER = 'all';
-  const SORT_ORDER_ASC = 'asc';
-  const SORT_ORDER_DESC = 'desc';
-  const DATA_TYPE_OTHERS = 'undefined';
 
   export default {
     name: 'UserPage',
@@ -246,8 +243,6 @@
       return {
         selectedUser: null,
         modalShown: null,
-        sortOrder: null,
-        sortKey: null,
       };
     },
     computed: {
@@ -384,22 +379,11 @@
       this.debouncedSearchTerm = debounce(this.emitSearchTerm, 500);
     },
     methods: {
-      changeSortHandler({ sortKey, sortOrder, index }) {
-        if (this.tableHeaders[index].dataType === DATA_TYPE_OTHERS) return;
-
-        if (this.sortKey === index) {
-          if (this.sortOrder === SORT_ORDER_ASC) {
-            this.sortOrder = SORT_ORDER_DESC;
-          } else if (this.sortOrder === SORT_ORDER_DESC) {
-            this.sortKey = null;
-            this.sortOrder = null;
-          }
-        } else {
-          this.sortKey = index;
-          this.sortOrder = SORT_ORDER_ASC;
-        }
-        console.log(`changeSort event emitted with index: ${index}, sortOrder: ${this.sortOrder}, and sortKey: ${this.sortKey}`);
-        this.$emit('changeSort', { sortOrder: this.sortOrder, sortKey: this.sortKey, index });
+      changeSortHandler({ sortKey, sortOrder }) {
+        this.sortKey = sortKey;
+        this.sortOrder = sortOrder;
+        console.log(`Stored sortKey: ${this.sortKey}, sortOrder: ${this.sortOrder}`);
+        
       },
       emptyMessageForItems(items, filterText) {
         if (this.facilityUsers.length === 0) {
