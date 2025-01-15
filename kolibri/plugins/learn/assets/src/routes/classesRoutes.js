@@ -36,6 +36,12 @@ export default [
   {
     name: ClassesPageNames.CLASS_ASSIGNMENTS,
     path: '/classes/:classId',
+    props: route => {
+      const classId = route.params.classId;
+      return {
+        classId,
+      };
+    },
     handler: toRoute => {
       const { classId } = toRoute.params;
       return noClassesGuard() || showClassAssignmentsPage(store, classId);

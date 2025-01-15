@@ -25,7 +25,7 @@
         class="search-input"
         :class="$computedClass(searchInputStyle)"
         dir="auto"
-        :placeholder="placeholder || coreString('searchLabel')"
+        :placeholder="computedPlaceholder"
       >
       <div class="search-buttons-wrapper">
         <KIconButton
@@ -61,11 +61,18 @@
 
 <script>
 
-  import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
+  import commonCoreStrings, { coreString } from 'kolibri/uiText/commonCoreStrings';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
   export default {
     name: 'SearchBox',
     mixins: [commonCoreStrings],
+    setup() {
+      const { windowBreakpoint } = useKResponsiveWindow();
+      return {
+        windowBreakpoint,
+      };
+    },
     props: {
       icon: {
         type: String,
@@ -117,6 +124,12 @@
           textAlign: this.isRtl ? 'right' : '',
         };
       },
+      computedPlaceholder() {
+        if ([3, 4].includes(this.windowBreakpoint)) {
+          return this.placeholder || this.$tr('find');
+        }
+        return this.placeholder || coreString('searchLabel');
+      },
     },
     watch: {
       value(current) {
@@ -152,6 +165,9 @@
         this.$emit('change', this.searchInputValue);
       },
     },
+    $trs: {
+      find: 'Find',
+    },
   };
 
 </script>
@@ -184,6 +200,9 @@
     padding: 0;
     padding-left: 8px;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     vertical-align: middle;
     border: 0;
 

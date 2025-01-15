@@ -16,7 +16,6 @@
           :label="className"
         />
       </h1>
-
       <AssignedLessonsCards :lessons="activeLessons" />
       <AssignedQuizzesCards
         :quizzes="activeQuizzes"
@@ -31,7 +30,6 @@
 <script>
 
   import { computed, onBeforeMount, onBeforeUnmount } from 'vue';
-  import { get } from '@vueuse/core';
   import KBreadcrumbs from 'kolibri-design-system/lib/KBreadcrumbs';
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
 
@@ -57,16 +55,15 @@
       LearnAppBarPage,
     },
     mixins: [commonCoreStrings, commonLearnStrings],
-    setup(_, { root }) {
+    setup(props) {
       const { fetchClass, getClass, getClassActiveLessons, getClassActiveQuizzes } =
         useLearnerResources();
 
-      const classId = root.$router.currentRoute.params.classId;
-      const classroom = computed(() => getClass(classId));
-      const className = computed(() => (get(classroom) ? get(classroom).name : ''));
-      const activeLessons = computed(() => getClassActiveLessons(get(classId)));
-      const activeQuizzes = computed(() => getClassActiveQuizzes(get(classId)));
-
+      const classId = computed(() => props.classId);
+      const classroom = computed(() => getClass(classId.value));
+      const className = computed(() => (classroom.value ? classroom.value.name : ''));
+      const activeLessons = computed(() => getClassActiveLessons(classId.value));
+      const activeQuizzes = computed(() => getClassActiveQuizzes(classId.value));
       let pollTimeoutId;
 
       function schedulePoll() {
@@ -98,6 +95,10 @@
         type: Boolean,
         default: false,
       },
+      classId: {
+        type: String,
+        required: true,
+      },
     },
     computed: {
       breadcrumbs() {
@@ -112,6 +113,7 @@
           },
           {
             text: this.className,
+            link: { name: ClassesPageNames.CLASS_ASSIGNMENTS },
           },
         ];
       },

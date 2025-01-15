@@ -14,10 +14,12 @@
           {{ injectedtr('otherLibraries') }}
         </h1>
       </KGridItem>
+
       <KGridItem
-        :layout12="{ span: 6 }"
-        :layout8="{ span: 4 }"
+        :layout12="{ span: 12 }"
+        :layout8="{ span: 8 }"
         :layout4="{ span: 4 }"
+        class="connection-status"
       >
         <div class="sync-status">
           <span
@@ -233,8 +235,6 @@
 
   .sync-status {
     display: flex;
-    justify-content: flex-end;
-    margin: 30px 0 10px;
 
     span {
       display: inline-flex;
@@ -253,6 +253,11 @@
 
   .other-libraries-grid {
     margin-left: 0.75em;
+  }
+
+  .connection-status {
+    margin-bottom: 10px;
+    margin-left: -8px;
   }
 
 </style>
