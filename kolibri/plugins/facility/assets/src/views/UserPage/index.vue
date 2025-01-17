@@ -377,12 +377,23 @@
     },
     created() {
       this.debouncedSearchTerm = debounce(this.emitSearchTerm, 500);
+      
     },
     methods: {
       changeSortHandler({ sortKey, sortOrder }) {
         this.sortKey = sortKey;
         this.sortOrder = sortOrder;
+        const column = 'birth_year'; // Set the column to 'birth_year'
+        const order = sortOrder; // Use the sortOrder from the handler
         console.log(`Stored sortKey: ${this.sortKey}, sortOrder: ${this.sortOrder}`);
+        this.$store
+          .dispatch('userManagement/fetchSortedFacilityUsers', { column, order })
+          .then(() => {
+            console.log('Facility users fetched and updated');
+          })
+          .catch(err => {
+            console.error('Failed to fetch sorted data:', err);
+          });
         
       },
       emptyMessageForItems(items, filterText) {
