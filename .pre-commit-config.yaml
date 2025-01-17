@@ -34,7 +34,7 @@ repos:
     -   id: core-js-api
         name: Rebuild kolibri package
         description: Rebuilds kolibri package on changes to core js api
-        entry: yarn run build-kolibri-tools
+        entry: node ./packages/build_kolibri_package.js
         language: system
         files: ^packages/kolibri/.*\.(js|vue)$
 - repo: local

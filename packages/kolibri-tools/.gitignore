@@ -3,3 +3,5 @@
 dist/*
 # Ignore any copied version of language info
 lib/i18n/language_info.json
+# Ignore any packaged version of the tools
+*.tgz

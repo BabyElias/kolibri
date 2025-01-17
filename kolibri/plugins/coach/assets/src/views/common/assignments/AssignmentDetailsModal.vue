@@ -11,6 +11,10 @@
         {{ submitErrorMessage }}
       </UiAlert>
 
+      <!--
+        TODO: Refactor or rename this component, setting a title or a description
+        is not part of an "assignment" process (?)
+      -->
       <fieldset>
         <KGrid>
           <KGridItem
@@ -78,7 +82,19 @@
         <legend>
           {{ recipientsLabel$() }}
         </legend>
+
+        <SidePanelRecipientsSelector
+          v-if="selectRecipientsWithSidePanel"
+          ref="recipientsSelector"
+          v-model="selectedCollectionIds"
+          :groups="groups"
+          :classId="classId"
+          :disabled="disabled || formIsSubmitted"
+          :adHocLearners.sync="adHocLearners"
+          :selectedCollectionIds.sync="selectedCollectionIds"
+        />
         <RecipientSelector
+          v-else
           v-model="selectedCollectionIds"
           :groups="groups"
           :classId="classId"
@@ -118,6 +134,7 @@
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
   import { coachStrings } from '../../common/commonCoachStrings';
   import RecipientSelector from './RecipientSelector';
+  import SidePanelRecipientsSelector from './SidePanelRecipientsSelector';
 
   export default {
     name: 'AssignmentDetailsModal',
@@ -125,6 +142,7 @@
       BottomAppBar,
       RecipientSelector,
       UiAlert,
+      SidePanelRecipientsSelector,
     },
     mixins: [commonCoreStrings],
     setup() {
@@ -180,6 +198,10 @@
       },
       // If set to true, all of the forms are disabled
       disabled: {
+        type: Boolean,
+        default: false,
+      },
+      selectRecipientsWithSidePanel: {
         type: Boolean,
         default: false,
       },
@@ -255,6 +277,15 @@
       iconName() {
         return this.assignmentIsQuiz ? 'quiz' : 'lesson';
       },
+      submitObject() {
+        return {
+          title: this.title,
+          description: this.description,
+          assignments: this.selectedCollectionIds,
+          active: this.activeIsSelected,
+          learner_ids: this.adHocLearners,
+        };
+      },
     },
     watch: {
       title() {
@@ -268,6 +299,13 @@
       },
       adHocLearners() {
         this.$emit('update', { learner_ids: this.adHocLearners });
+      },
+      submitObject() {
+        if (this.showServerError) {
+          this.$nextTick(() => {
+            this.validate(false);
+          });
+        }
       },
     },
     methods: {
@@ -292,13 +330,7 @@
 
         if (this.formIsValid) {
           this.formIsSubmitted = true;
-          this.$emit('submit', {
-            title: this.title,
-            description: this.description,
-            assignments: this.selectedCollectionIds,
-            active: this.activeIsSelected,
-            learner_ids: this.adHocLearners,
-          });
+          this.$emit('submit', this.submitObject);
         } else {
           this.formIsSubmitted = false;
         }
@@ -326,6 +358,35 @@
       handleSubmitSuccess() {
         this.showTitleError = false;
         this.showServerError = false;
+      },
+      /**
+       * @public
+       */
+      validate(handleFailure = true) {
+        let error = '';
+        this.showServerError = false;
+        // Validate title
+        if (this.title === '') {
+          if (handleFailure) {
+            this.handleSubmitTitleFailure();
+          }
+          error = this.coreString('requiredFieldError');
+        }
+
+        // Validate recipients
+        const recipientsError = this.$refs.recipientsSelector?.validate();
+        if (!error && recipientsError) {
+          error = recipientsError;
+          if (handleFailure) {
+            this.$refs.recipientsSelector?.handleSubmitRecipientsFailure();
+          }
+        }
+
+        if (error) {
+          this.showServerError = true;
+        }
+
+        return error;
       },
     },
   };

@@ -1,7 +1,6 @@
-/* Build file for kolibri-tools and kolibri */
+/* Build file for kolibri-tools */
 const fs = require('fs');
 const path = require('path');
-const { rebuildApiSpec } = require('./lib/apiSpecExportTools');
 
 // /*
 //  * Copy the kolibri language_info.json into the kolibri-tools package for use externally
@@ -16,5 +15,3 @@ fs.writeFileSync(
     encoding: 'utf-8',
   },
 );
-
-rebuildApiSpec();

@@ -17,6 +17,7 @@ on:
             - 'kolibri-logging'
             - 'kolibri-module'
             - 'kolibri-plugin-data'
+            - 'kolibri-tools'
             - 'kolibri-viewer'
 
 jobs:

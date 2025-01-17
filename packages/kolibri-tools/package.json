@@ -1,6 +1,6 @@
 {
   "name": "kolibri-tools",
-  "version": "0.16.1-dev.1",
+  "version": "0.18.0",
   "description": "Tools for building Kolibri frontend plugins",
   "main": "lib/cli.js",
   "repository": {
@@ -15,7 +15,7 @@
     "kolibri-tools": "./lib/cli.js"
   },
   "scripts": {
-    "build-kolibri-tools": "node ./build_kolibri_tools.js"
+    "prepack": "node ./build_kolibri_tools.js"
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
@@ -32,7 +32,7 @@
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "^29.7.0",
     "babel-loader": "^9.2.1",
-    "browserslist-config-kolibri": "0.16.1-dev.1",
+    "browserslist-config-kolibri": "0.18.0",
     "chalk": "4.1.2",
     "check-node-version": "^4.2.1",
     "cli-table": "^0.3.11",
