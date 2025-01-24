@@ -168,126 +168,34 @@
           </KGridItem>
         </KGrid>
 
-        <AccordionContainer>
-          <template #header="{ canExpandAll, expandAll, canCollapseAll, collapseAll }">
-            <div class="questions-accordion-header">
-              <div>
-                <KCheckbox
-                  ref="selectAllCheckbox"
-                  class="select-all-box"
-                  :label="selectAllLabel$()"
-                  :checked="allQuestionsSelected"
-                  :indeterminate="selectAllIsIndeterminate"
-                  @change="() => selectAllQuestions()"
-                  @click.stop="() => {}"
-                />
-              </div>
-              <div class="trailing-actions">
-                <KIconButton
-                  icon="expandAll"
-                  :tooltip="expandAll$()"
-                  :disabled="!canExpandAll"
-                  @click="expandAll"
-                />
-                <KIconButton
-                  icon="collapseAll"
-                  :tooltip="collapseAll$()"
-                  :disabled="!canCollapseAll"
-                  @click="collapseAll"
-                />
-                <KIconButton
-                  icon="refresh"
-                  :tooltip="replaceAction$()"
-                  :disabled="!canReplaceQuestions"
-                  @click="handleReplaceSelection()"
-                />
-                <KIconButton
-                  icon="trash"
-                  :tooltip="coreString('deleteAction')"
-                  :aria-label="coreString('deleteAction')"
-                  :disabled="selectedActiveQuestions.length === 0"
-                  @click="() => deleteQuestions()"
-                />
-              </div>
-            </div>
+        <QuestionsAccordion
+          :questions="activeQuestions"
+          :selectedQuestions="selectedActiveQuestions"
+          :getQuestionContent="question => activeResourceMap[question.exercise_id]"
+          :selectAllIsChecked="allQuestionsSelected"
+          :selectAllIsIndeterminate="selectAllIsIndeterminate"
+          @select="toggleQuestionInSelection"
+          @selectAll="selectAllQuestions"
+          @error="err => $emit('error', err)"
+          @sort="handleQuestionOrderChange"
+        >
+          <template #header-trailing-actions>
+            <KIconButton
+              icon="refresh"
+              :tooltip="replaceAction$()"
+              :aria-label="replaceAction$()"
+              :disabled="!canReplaceQuestions"
+              @click="handleReplaceSelection"
+            />
+            <KIconButton
+              icon="trash"
+              :tooltip="coreString('deleteAction')"
+              :aria-label="coreString('deleteAction')"
+              :disabled="selectedActiveQuestions.length === 0"
+              @click="deleteQuestions"
+            />
           </template>
-
-          <DragContainer
-            key="drag-container"
-            :items="activeQuestions"
-            @sort="handleQuestionOrderChange"
-            @dragStart="handleDragStart"
-          >
-            <transition-group
-              tag="div"
-              name="list"
-              class="wrapper"
-            >
-              <Draggable
-                v-for="(question, index) in activeQuestions"
-                :key="`drag-${question.item}`"
-                tabindex="-1"
-                :style="{
-                  background: $themeTokens.surface,
-                }"
-              >
-                <AccordionItem
-                  :title="
-                    displayQuestionTitle(question, activeResourceMap[question.exercise_id].title)
-                  "
-                  :aria-selected="selectedActiveQuestions.includes(question.item)"
-                  :headerAppearanceOverrides="{
-                    userSelect: dragActive ? 'none !important' : 'text',
-                  }"
-                >
-                  <template #leading-actions>
-                    <DragHandle>
-                      <div>
-                        <DragSortWidget
-                          class="sort-widget"
-                          :moveUpText="upLabel$"
-                          :moveDownText="downLabel$"
-                          :noDrag="true"
-                          :isFirst="index === 0"
-                          :isLast="index === activeQuestions.length - 1"
-                          @moveUp="() => handleKeyboardDragUp(index, activeQuestions)"
-                          @moveDown="() => handleKeyboardDragDown(index, activeQuestions)"
-                        />
-                      </div>
-                    </DragHandle>
-                    <KCheckbox
-                      class="accordion-item-checkbox"
-                      :checked="selectedActiveQuestions.includes(question.item)"
-                      @change="(_, $event) => handleQuestionCheckboxChange(question.item, $event)"
-                    />
-                  </template>
-                  <template #content>
-                    <div
-                      :id="`question-panel-${question.item}`"
-                      :style="{ userSelect: dragActive ? 'none !important' : 'text' }"
-                    >
-                      <ContentRenderer
-                        :ref="`contentRenderer-${question.item}`"
-                        :kind="activeResourceMap[question.exercise_id].kind"
-                        :lang="activeResourceMap[question.exercise_id].lang"
-                        :files="activeResourceMap[question.exercise_id].files"
-                        :available="activeResourceMap[question.exercise_id].available"
-                        :itemId="question.question_id"
-                        :assessment="true"
-                        :allowHints="false"
-                        :interactive="false"
-                        @interaction="() => null"
-                        @updateProgress="() => null"
-                        @updateContentState="() => null"
-                        @error="err => $emit('error', err)"
-                      />
-                    </div>
-                  </template>
-                </AccordionItem>
-              </Draggable>
-            </transition-group>
-          </DragContainer>
-        </AccordionContainer>
+        </QuestionsAccordion>
       </div>
     </KTabsPanel>
 
@@ -312,27 +220,18 @@
 
 <script>
 
-  import { ref } from 'vue';
   import logging from 'kolibri-logging';
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
   import {
     displaySectionTitle,
     enhancedQuizManagementStrings,
-    displayQuestionTitle,
   } from 'kolibri-common/strings/enhancedQuizManagementStrings';
-  import DragContainer from 'kolibri-common/components/sortable/DragContainer';
-  import DragHandle from 'kolibri-common/components/sortable/DragHandle';
-  import DragSortWidget from 'kolibri-common/components/sortable/DragSortWidget';
-  import Draggable from 'kolibri-common/components/sortable/Draggable';
   import { MAX_QUESTIONS_PER_QUIZ_SECTION } from 'kolibri/constants';
-  import AccordionItem from 'kolibri-common/components/accordion/AccordionItem';
-  import AccordionContainer from 'kolibri-common/components/accordion/AccordionContainer';
-  import { searchAndFilterStrings } from 'kolibri-common/strings/searchAndFilterStrings';
   import useSnackbar from 'kolibri/composables/useSnackbar';
   import { injectQuizCreation } from '../../../composables/useQuizCreation';
   import commonCoach from '../../common';
   import { PageNames } from '../../../constants';
-  import useDrag from './useDrag.js';
+  import QuestionsAccordion from '../../common/QuestionsAccordion.vue';
   import TabsWithOverflow from './TabsWithOverflow';
 
   const logger = logging.getLogger(__filename);
@@ -340,18 +239,12 @@
   export default {
     name: 'CreateQuizSection',
     components: {
-      AccordionContainer,
-      AccordionItem,
-      DragContainer,
-      Draggable,
-      DragSortWidget,
-      DragHandle,
       TabsWithOverflow,
+      QuestionsAccordion,
     },
     mixins: [commonCoreStrings, commonCoach],
     setup() {
       const {
-        selectAllLabel$,
         addSectionLabel$,
         quizSectionsLabel$,
         addQuestionsLabel$,
@@ -366,11 +259,7 @@
         sectionDeletedNotification$,
         deleteConfirmation$,
         questionsDeletedNotification$,
-        expandAll$,
-        collapseAll$,
       } = enhancedQuizManagementStrings;
-
-      const { upLabel$, downLabel$ } = searchAndFilterStrings;
 
       const {
         // Methods
@@ -392,16 +281,9 @@
         selectedActiveQuestions,
       } = injectQuizCreation();
 
-      const { moveUpOne, moveDownOne } = useDrag();
-      const dragActive = ref(false);
-
       const { createSnackbar } = useSnackbar();
 
       return {
-        dragActive,
-        expandAll$,
-        collapseAll$,
-        selectAllLabel$,
         quizSectionsLabel$,
         addSectionLabel$,
         addQuestionsLabel$,
@@ -426,10 +308,6 @@
         addSection,
         removeSection,
         displaySectionTitle,
-        displayQuestionTitle,
-
-        moveDownOne,
-        moveUpOne,
 
         // Computed
         allSections,
@@ -441,8 +319,6 @@
         selectedActiveQuestions,
 
         createSnackbar,
-        upLabel$,
-        downLabel$,
       };
     },
     data() {
@@ -613,7 +489,6 @@
           questions: newArray,
         };
         this.updateSection(payload);
-        this.dragActive = false;
       },
       handleAddSection() {
         this.addSection();
@@ -621,22 +496,6 @@
           name: PageNames.QUIZ_SECTION_EDITOR,
           params: { sectionIndex: this.allSections.length - 1 },
         });
-      },
-      handleDragStart() {
-        // Used to mitigate the issue of text being selected while dragging
-        this.dragActive = true;
-      },
-      handleKeyboardDragDown(oldIndex, array) {
-        const newArray = this.moveDownOne(oldIndex, array);
-        this.handleQuestionOrderChange({ newArray });
-      },
-      handleKeyboardDragUp(oldIndex, array) {
-        const newArray = this.moveUpOne(oldIndex, array);
-        this.handleQuestionOrderChange({ newArray });
-      },
-      handleQuestionCheckboxChange(item, $event) {
-        $event.stopPropagation();
-        this.toggleQuestionInSelection(item);
       },
       openSelectResources() {
         this.$router.push({
@@ -763,10 +622,6 @@
     max-width: 25rem;
   }
 
-  .accordion-item-checkbox {
-    margin-left: 0.5em;
-  }
-
   /deep/ .checkbox-icon {
     top: 2px;
   }
@@ -777,17 +632,6 @@
 
   /deep/ .overflow-tabs svg {
     top: 5px !important;
-  }
-
-  .select-all-box {
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: 1.5em;
-
-    // Vertical centering here into the KCheckbox
-    /deep/ & label {
-      line-height: 28px;
-    }
   }
 
   .right-side-heading {
@@ -817,18 +661,6 @@
   // This makes sure that the keyboard focus ring is visible on the section tabs
   /deep/ .tab {
     outline-offset: -5px !important;
-  }
-
-  .questions-accordion-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-left: 8px;
-
-    .trailing-actions {
-      display: flex;
-      align-items: center;
-    }
   }
 
 </style>

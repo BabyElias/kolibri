@@ -72,38 +72,54 @@ describe('File Path replacement', () => {
     it('should handle plus signs in CSS urls', () => {
       expect(getCSSPaths('url("./my%2Bfile.woff")')).toEqual(['./my+file.woff']);
     });
-    test('handles URLs with parentheses in filename', () => {
+    test('handles URLs with parentheses in filename when quoted', () => {
       const css = `
         background: url('image(1).png');
         background-image: url("file(with)brackets.jpg");
+      `;
+      const paths = getCSSPaths(css);
+      expect(paths).toEqual(['image(1).png', 'file(with)brackets.jpg']);
+    });
+    test('does not handle URLs with parentheses in filename when not quoted', () => {
+      const css = `
         border-image: url(filename(final).gif);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(['image(1).png', 'file(with)brackets.jpg', 'filename(final).gif']);
+      expect(paths).toEqual(['filename(final']);
     });
 
     test('handles query parameters correctly with parentheses in filename', () => {
       const css = `
         background: url('image(1).png?v=123');
         background-image: url("file(with)brackets.jpg?version=2");
-        border-image: url(filename(final).gif?x=1&y=2);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(['image(1).png', 'file(with)brackets.jpg', 'filename(final).gif']);
+      expect(paths).toEqual(['image(1).png', 'file(with)brackets.jpg']);
     });
 
     test('handles complex filenames with multiple parentheses', () => {
       const css = `
         background: url('path/to/image(1)(2).png');
         background-image: url("file(with)(more)brackets.jpg");
-        border-image: url(file(name(1))(v2).gif);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual([
-        'path/to/image(1)(2).png',
-        'file(with)(more)brackets.jpg',
-        'file(name(1))(v2).gif',
-      ]);
+      expect(paths).toEqual(['path/to/image(1)(2).png', 'file(with)(more)brackets.jpg']);
+    });
+    test('handles multiple filenames with no quotation marks', () => {
+      const css = `
+      .h5p-question-plus-one {
+        background-image: url(../images/plus-one.svg);
+      }
+      .h5p-question-minus-one {
+        background-image: url(../images/minus-one.svg);
+      }
+      .h5p-question-hidden-one {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      `;
+      const paths = getCSSPaths(css);
+      expect(paths).toEqual(['../images/plus-one.svg', '../images/minus-one.svg']);
     });
     test('handles mixed quotes and no quotes correctly', () => {
       const css = `
@@ -128,42 +144,57 @@ describe('File Path replacement', () => {
       const css = `
         background: url('file\\'s.png');
         background: url("file\\".png");
+        background: url("file\\").png");
+        background: url('file\\').png');
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(["file's.png", 'file".png']);
+      expect(paths).toEqual(["file's.png", 'file".png', 'file").png', "file').png"]);
+    });
+
+    test('handles escaped spaces', () => {
+      const css = `
+        background: url('file\\ with\\ spaces.png');
+        background: url("path\\ to\\ file.jpg");
+        background: url('multiple\\  spaces.png');
+      `;
+      const paths = getCSSPaths(css);
+      expect(paths).toEqual(['file with spaces.png', 'path to file.jpg', 'multiple  spaces.png']);
+    });
+
+    test('handles multiple escaped backslashes', () => {
+      const css = `
+        background: url('path\\\\.png');
+        background: url("file\\\\\\\\.jpg");
+        background: url('test\\\\\\\\\\\\.gif');
+      `;
+      const paths = getCSSPaths(css);
+      expect(paths).toEqual(['path\\.png', 'file\\\\.jpg', 'test\\\\\\.gif']);
     });
 
     test('handles complex combinations of parentheses and query params', () => {
       const css = `
         background: url('img(v1)(final).png?v=(1)&x=(2)');
-        background: url(img((1)(2)(3)).png?v=1);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(['img(v1)(final).png', 'img((1)(2)(3)).png']);
+      expect(paths).toEqual(['img(v1)(final).png']);
     });
 
     test('handles URLs with spaces and special characters', () => {
       const css = `
         background: url('my image (1).png');
         background: url("path/to/image (v2).jpg");
-        background: url(folder (old)/image.png);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual([
-        'my image (1).png',
-        'path/to/image (v2).jpg',
-        'folder (old)/image.png',
-      ]);
+      expect(paths).toEqual(['my image (1).png', 'path/to/image (v2).jpg']);
     });
 
     test('handles malformed but recoverable URLs', () => {
       const css = `
         background: url('broken(but(fixable.png');
         background: url("missing(paren.jpg?v=1");
-        background: url(extra)paren).gif);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(['broken(but(fixable.png', 'missing(paren.jpg', 'extra)paren).gif']);
+      expect(paths).toEqual(['broken(but(fixable.png', 'missing(paren.jpg']);
     });
 
     test('handles query parameters with special characters', () => {
@@ -180,10 +211,9 @@ describe('File Path replacement', () => {
       const css = `
         background: url('image((((1)))).jpg');
         background: url("file(()()).png");
-        background: url(multiple()()()().gif);
       `;
       const paths = getCSSPaths(css);
-      expect(paths).toEqual(['image((((1)))).jpg', 'file(()()).png', 'multiple()()()().gif']);
+      expect(paths).toEqual(['image((((1)))).jpg', 'file(()()).png']);
     });
   });
   describe('CSS path replacement', () => {
@@ -264,6 +294,37 @@ describe('File Path replacement', () => {
         'url("new-file.woff")',
       );
     });
+    test('handles multiple filenames with no quotation marks in replacements', () => {
+      const css = `
+      .h5p-question-plus-one {
+        background-image: url(../images/plus-one.svg);
+      }
+      .h5p-question-minus-one {
+        background-image: url(../images/minus-one.svg);
+      }
+      .h5p-question-hidden-one {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      `;
+      const packageFiles = {
+        '../images/plus-one.svg': 'assets/plus.svg',
+        '../images/minus-one.svg': 'assets/minus.svg',
+      };
+      const result = replaceCSSPaths(css, packageFiles);
+      expect(result).toBe(`
+      .h5p-question-plus-one {
+        background-image: url(assets/plus.svg);
+      }
+      .h5p-question-minus-one {
+        background-image: url(assets/minus.svg);
+      }
+      .h5p-question-hidden-one {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      `);
+    });
     test('replaces paths containing parentheses correctly', () => {
       const css = `
         background: url('image(1).png');
@@ -297,6 +358,67 @@ describe('File Path replacement', () => {
         background: url(new/plain.png);
         background-image: url('new/single.jpg');
         border-image: url("new/double.gif");
+      `);
+    });
+
+    test('handles escaped quotes in filename replacements', () => {
+      const css = `
+        background: url('file\\'s.png');
+        background: url("file\\".png");
+        background: url("file\\").png");
+        background: url('file\\').png');
+      `;
+      const packageFiles = {
+        "file's.png": "new's.png",
+        'file".png': 'new".png',
+        'file").png': 'new").png',
+        "file').png": "new').png",
+      };
+      const result = replaceCSSPaths(css, packageFiles);
+      /* eslint-disable no-useless-escape */
+      expect(result).toBe(`
+        background: url('new's.png');
+        background: url("new\".png");
+        background: url("new\").png");
+        background: url('new').png');
+      `);
+      /* eslint-enable */
+    });
+    test('handles escaped spaces in replacements', () => {
+      const css = `
+        background: url('file\\ with\\ spaces.png');
+        background: url("path\\ to\\ file.jpg");
+        background: url('multiple\\  spaces.png');
+      `;
+      const packageFiles = {
+        'file with spaces.png': 'new-spaces.png',
+        'path to file.jpg': 'new-path.jpg',
+        'multiple  spaces.png': 'new-multiple.png',
+      };
+      const result = replaceCSSPaths(css, packageFiles);
+      expect(result).toBe(`
+        background: url('new-spaces.png');
+        background: url("new-path.jpg");
+        background: url('new-multiple.png');
+      `);
+    });
+
+    test('handles multiple escaped backslashes in replacements', () => {
+      const css = `
+        background: url('path\\\\.png');
+        background: url("file\\\\\\\\.jpg");
+        background: url('test\\\\\\\\\\\\.gif');
+      `;
+      const packageFiles = {
+        'path\\.png': 'new1.png',
+        'file\\\\.jpg': 'new2.jpg',
+        'test\\\\\\.gif': 'new3.gif',
+      };
+      const result = replaceCSSPaths(css, packageFiles);
+      expect(result).toBe(`
+        background: url('new1.png');
+        background: url("new2.jpg");
+        background: url('new3.gif');
       `);
     });
   });

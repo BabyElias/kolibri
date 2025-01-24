@@ -18,10 +18,8 @@ const h5pStaticFolder = path.resolve(__dirname, '../../kolibri/core/content/stat
 const logging = console; // eslint-disable-line no-console
 
 const fileManifest = [
-  /styles\/h5p\.css/,
-  /styles\/h5p-core-button\.css/,
-  /styles\/h5p-confirmation-dialog\.css/,
-  /fonts\/h5p-core-[0-9]+\.(eot|svg|ttf|woff)/,
+  /styles\//,
+  /fonts\//,
   /images\/.*/,
   /js\/h5p-confirmation-dialog\.js/,
   /js\/h5p-content-type\.js/,

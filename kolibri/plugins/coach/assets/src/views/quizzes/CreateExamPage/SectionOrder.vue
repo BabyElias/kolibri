@@ -100,7 +100,7 @@
   import { searchAndFilterStrings } from 'kolibri-common/strings/searchAndFilterStrings';
   import { PageNames } from '../../../constants/index';
   import { injectQuizCreation } from '../../../composables/useQuizCreation';
-  import useDrag from './useDrag.js';
+  import useDrag from '../../common/useDrag';
 
   export default {
     name: 'SectionOrder',
