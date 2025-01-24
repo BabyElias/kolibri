@@ -1,8 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 import { UserKinds } from 'kolibri/constants';
 import FacilityUserResource from 'kolibri-common/apiResources/FacilityUserResource';
+import samePageCheckGenerator from 'kolibri-common/utils/samePageCheckGenerator';
+import pickBy from 'lodash/pickBy';
+import { _userState } from '../mappers';
 import { updateFacilityLevelRoles } from './utils';
-import { fetchSortedFacilityUsersHandler } from './handlers';
+
 
 /**
  * Fetch facility users with sorting applied based on the column clicked
@@ -11,8 +14,33 @@ import { fetchSortedFacilityUsersHandler } from './handlers';
  * @param {string} payload.column - The name of the column to sort by
  * @param {string} payload.order - The sort order ("asc", "desc", or null)
  */
-export function fetchSortedFacilityUsers(store, payload) {
-  return fetchSortedFacilityUsersHandler(store, payload);
+export function fetchSortedFacilityUsers(store, { column, order }) {
+  store.commit('SET_STATE', { dataLoading: true });
+
+  const orderingParam = order === 'desc' ? `-${column}` : column || null;
+  const shouldResolve = samePageCheckGenerator(store);
+
+  return FacilityUserResource.fetchCollection({
+    getParams: pickBy({
+      ordering: orderingParam, // Pass the ordering parameter
+    }),
+    force: true,
+  })
+    .then(users => {
+      if (shouldResolve()) {
+        // Map the response data to state as required
+        store.commit('SET_STATE', {
+          facilityUsers: users.map(_userState),
+        });
+      }
+      store.commit('SET_STATE', { dataLoading: false });
+      store.dispatch('notLoading');
+    })
+    .catch(error => {
+      shouldResolve() ? store.dispatch('handleApiError', { error, reloadOnReconnect: true },{root: true}) : null;
+      store.commit('SET_STATE', { dataLoading: false });
+      store.dispatch('notLoading');
+    });
 }
 /**
  * Does a POST request to assign a user role (only used in this file)
